@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+        
+        .result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .image-container {
+            margin-top: 20px;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 5px;
+        }
+        
+        .error {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #388e3c;
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .prompts-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .prompt-group {
+            margin-bottom: 15px;
+        }
+        
+        .prompt-group h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .positive-prompt, .negative-prompt {
+            margin: 0;
+            padding: 8px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .negative-prompt {
+            background-color: #fff9f9;
+            border-color: #fcc;
+        }
+        
+        .params {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Pixel Art Generator</h1>
+        
+        <form id="generationForm">
+            <div class="form-group">
+                <label for="prompt">Describe the pixel art you want to generate:</label>
+                <textarea 
+                    id="prompt" 
+                    placeholder="e.g., A cute pixel art cat wearing a hat, white background, no borders"
+                    required
+                ></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="negativePrompt">Things to avoid (optional):</label>
+                <input 
+                    type="text" 
+                    id="negativePrompt" 
+                    placeholder="e.g., shadows, borders, text"
+                >
+            </div>
+            
+            <button type="submit" id="generateBtn">Generate Pixel Art</button>
+        </form>
+        
+        <div id="loading" class="loading" style="display: none;">
+            🎨 Generating your pixel art... This may take a moment...
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('generationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const prompt = document.getElementById('prompt').value.trim();
+            const negativePrompt = document.getElementById('negativePrompt').value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingDiv = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+            
+            // Show loading, disable button
+            loadingDiv.style.display = 'block';
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            resultDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        negative_prompt: negativePrompt
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Image generated successfully!</div>
+                        
+                        <div class="prompts-container">
+                            <h3>Generated Prompts:</h3>
+                            <div class="prompt-group">
+                                <h4>Positive Prompt:</h4>
+                                <p class="positive-prompt">${data.positive_prompt || 'N/A'}</p>
+                            </div>
+                            <div class="prompt-group">
+                                <h4>Negative Prompt:</h4>
+                                <p class="negative-prompt">${data.negative_prompt || 'N/A'}</p>
+                            </div>
+                            <div class="params">
+                                <strong>Steps:</strong> ${data.steps || 'N/A'}, 
+                                <strong>CFG:</strong> ${data.cfg || 'N/A'}
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="${data.image_url}?t=${new Date().getTime()}" alt="Generated Pixel Art">
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${data.error || 'Unknown error occurred'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message || 'Failed to connect to server'}</div>`;
+            } finally {
+                // Hide loading, enable button
+                loadingDiv.style.display = 'none';
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Pixel Art';
+            }
+        });
+    </script>
+</body>
+</html>

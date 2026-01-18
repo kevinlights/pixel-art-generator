@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest>=7.0.0
+pytest-flask
+flake8
+black
+pre-commit
+python-dotenv

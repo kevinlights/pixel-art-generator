@@ -1,0 +1,21 @@
+{
+  "name": "pixel-art-generator",
+  "version": "1.0.0",
+  "description": "A web-based tool for generating pixel art images using AI",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kevinlights/pixel-art-generator.git"
+  },
+  "keywords": [
+    "pixel-art",
+    "ai",
+    "generator",
+    "image-generation"
+  ],
+  "author": "Kevin Lights",
+  "license": "MIT"
+}
