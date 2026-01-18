@@ -11,6 +11,22 @@ from io import BytesIO
 from PIL import Image
 from pathlib import Path
 import os
+import sys
+import inspect
+
+# Get the project root directory to import config
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+try:
+    from config import Config
+    GENERATED_IMAGES_DIR = Config.GENERATED_IMAGES_DIR
+    DRAW_THINGS_API_URL = getattr(Config, 'DRAW_THINGS_API_URL', 'http://localhost:7860/sdapi/v1/txt2img')
+except ImportError:
+    # Fallback to defaults if config is not available
+    GENERATED_IMAGES_DIR = "generated_images"
+    DRAW_THINGS_API_URL = 'http://localhost:7860/sdapi/v1/txt2img'
 
 
 def load_prompt_from_json(json_file_path: str = "prompt.json"):
@@ -52,7 +68,7 @@ def call_draw_things_api(prompt: str, negative_prompt: str, steps: int, cfg: flo
         PIL.Image: 生成的图像对象，如果失败则返回 None
     """
     # Draw Things API 地址
-    api_url = "http://localhost:7860/sdapi/v1/txt2img"
+    api_url = DRAW_THINGS_API_URL
     
     # 构建请求参数
     payload = {
@@ -117,7 +133,7 @@ def call_draw_things_api(prompt: str, negative_prompt: str, steps: int, cfg: flo
         return None
 
 
-def save_image(img: Image.Image, output_dir: str = "generated_images"):
+def save_image(img: Image.Image, output_dir: str = None):
     """
     保存图像到指定目录
     
@@ -125,6 +141,10 @@ def save_image(img: Image.Image, output_dir: str = "generated_images"):
         img: PIL 图像对象
         output_dir: 输出目录
     """
+    # Use config value if output_dir is not provided
+    if output_dir is None:
+        output_dir = GENERATED_IMAGES_DIR
+    
     # 创建输出目录
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True)
@@ -168,8 +188,8 @@ def main():
     )
     
     if img:
-        # 保存图像到 generated_images 目录
-        save_image(img, "generated_images")
+        # 保存图像到配置的目录
+        save_image(img)
         print("🎉 图像生成完成！")
     else:
         print("❌ 图像生成失败，请检查 Draw Things 是否正在运行并启用了 API")

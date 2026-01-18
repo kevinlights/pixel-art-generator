@@ -12,6 +12,7 @@ class Config:
     # API settings
     LM_STUDIO_BASE_URL = os.environ.get('LM_STUDIO_BASE_URL') or 'http://localhost:1234'
     LM_STUDIO_MODEL = os.environ.get('LM_STUDIO_MODEL') or 'qwen2.5-coder-7b-instruct-mlx'
+    DRAW_THINGS_API_URL = os.environ.get('DRAW_THINGS_API_URL') or 'http://localhost:7860/sdapi/v1/txt2img'
     
     # Image generation settings
     DEFAULT_STEPS = int(os.environ.get('DEFAULT_STEPS') or 8)
@@ -21,13 +22,17 @@ class Config:
     
     # File paths
     GENERATED_IMAGES_DIR = os.environ.get('GENERATED_IMAGES_DIR') or 'generated_images'
-    PROMPT_TEMPLATE_PATH = os.environ.get('PROMPT_TEMPLATE_PATH') or 'prompt.tpl'
+    PROMPT_TEMPLATE_PATH = os.environ.get('PROMPT_TEMPLATE_PATH') or os.path.join('utils', 'prompt.tpl')
     
     # Create directories if they don't exist
     @staticmethod
     def init_app(app):
         os.makedirs(Config.GENERATED_IMAGES_DIR, exist_ok=True)
-        if not os.path.exists(Config.PROMPT_TEMPLATE_PATH):
+        prompt_template_path = Config.PROMPT_TEMPLATE_PATH
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(prompt_template_path), exist_ok=True)
+        
+        if not os.path.exists(prompt_template_path):
             # Create a default prompt template if it doesn't exist
             default_template = {
                 "positive": "",
@@ -38,7 +43,7 @@ class Config:
                 "height": Config.DEFAULT_HEIGHT
             }
             import json
-            with open(Config.PROMPT_TEMPLATE_PATH, 'w', encoding='utf-8') as f:
+            with open(prompt_template_path, 'w', encoding='utf-8') as f:
                 json.dump(default_template, f, indent=4, ensure_ascii=False)
 
 

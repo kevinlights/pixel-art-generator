@@ -92,7 +92,7 @@ def generate_image():
                 return jsonify({'error': 'Image generation failed - check if Draw Things API is running'}), 500
                     
             # Save the generated image
-            save_image(img, "generated_images")
+            save_image(img)  # Uses config-defined directory
                     
         except ImportError as e:
             print(f"Import error: {e}")

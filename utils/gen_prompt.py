@@ -23,8 +23,27 @@ def save_prompts_to_template(positive_prompt: str, negative_prompt: str, filenam
         negative_prompt: 负向提示词
         filename: 保存的文件名
     """
-    # 读取模板文件
-    template_path = os.path.join(os.path.dirname(__file__), "prompt.tpl")
+    # Import config to use configured template path
+    import sys
+    import os
+    import inspect
+    
+    # Get the project root directory to import config
+    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    parent_dir = os.path.dirname(current_dir)
+    grandparent_dir = os.path.dirname(parent_dir)
+    sys.path.insert(0, grandparent_dir)
+    
+    try:
+        from config import Config
+        template_path = Config.PROMPT_TEMPLATE_PATH
+    except ImportError:
+        # Fallback to default if config is not available
+        template_path = os.path.join(os.path.dirname(__file__), "prompt.tpl")
+    
+    # Ensure we have the right path if it's relative to project root
+    if not os.path.isabs(template_path) and template_path.startswith('utils/'):
+        template_path = os.path.join(os.path.dirname(current_dir), template_path)
     with open(template_path, 'r', encoding='utf-8') as f:
         template_data = json.load(f)
     
@@ -54,8 +73,25 @@ def generate_stable_diffusion_prompt(user_description: str, negative_requirement
     Returns:
         元组，包含优化后的正面提示词和负面提示词
     """
-    # LM Studio 服务的基础 URL
-    base_url = os.getenv("LM_STUDIO_BASE_URL", "http://localhost:1234")
+    # Import config to use configured values
+    import sys
+    import os
+    import inspect
+    
+    # Get the project root directory to import config
+    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    parent_dir = os.path.dirname(current_dir)
+    grandparent_dir = os.path.dirname(parent_dir)
+    sys.path.insert(0, grandparent_dir)
+    
+    try:
+        from config import Config
+        base_url = Config.LM_STUDIO_BASE_URL
+        model_name = Config.LM_STUDIO_MODEL
+    except ImportError:
+        # Fallback to environment variables if config is not available
+        base_url = os.getenv("LM_STUDIO_BASE_URL", "http://localhost:1234")
+        model_name = os.getenv("LM_STUDIO_MODEL", "qwen2.5-coder-7b-instruct-mlx")
     
     # 构建系统提示，强调返回纯净的提示词
     system_prompt = (
@@ -80,7 +116,7 @@ def generate_stable_diffusion_prompt(user_description: str, negative_requirement
             {"role": "user", "content": user_prompt}
         ],
         # "model": "zai-org/glm-4.6v-flash",
-        "model": "qwen2.5-coder-7b-instruct-mlx",
+        "model": model_name,
         "temperature": 0.3,  # Even lower temperature for more deterministic output
         "max_tokens": None,  # No limit on output length
         "stream": False
