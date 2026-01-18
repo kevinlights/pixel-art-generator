@@ -45,7 +45,6 @@ pixel-art-generator/
 ├── requirements-dev.txt           # Development dependencies
 ├── setup.py                      # Package setup configuration
 ├── Makefile                      # Common development tasks
-├── package.json                  # Node.js package manifest
 ├── LICENSE                       # License information
 └── README.md                     # This file
 ```
